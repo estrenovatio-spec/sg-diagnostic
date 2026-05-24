@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fullName      String
+  age           Int
+  city          String
+  phone         String?
+  telegram      String?
+
+  maritalStatus   MaritalStatus
+  profession      String
+  incomeLevel     IncomeLevel
+  incomeStability StabilityLevel
+
+  hasDebts   DebtLevel
+  hasSavings SavingsLevel
+  assets     AssetType[]
+
+  mainPainPoint  PainPoint
+  painPointOther String?
+  goals35years   GoalType[]
+
+  triedBefore String?
+  mistakes    String?
+
+  whyNow         WhyNowReason
+  readinessLevel ReadinessLevel
+  feedbackStyle  FeedbackStyle
+  monthlyReserve ReserveAmount
+  advisorBudget  BudgetLevel
+
+  rulesAccepted Boolean @default(false)
+  pdConsent     Boolean @default(false)
+
+  userQuestion String?
+
+  aiReport      AiReport?
+  qualification Qualification @default(PENDING)
+  nextStep      NextStep?
+
+  utmSource String?
+  userAgent String?
+  ipHash    String?
+}
+
+model AiReport {
+  id     String @id @default(cuid())
+  leadId String @unique
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  generatedAt DateTime @default(now())
+
+  summary       String
+  strengths     String[]
+  growthZones   String[]
+  risks         String[]
+  quickWins     String[]
+
+  priorityFocus              String
+  investmentReadiness        Boolean
+  consultationRecommendation String
+
+  rawPrompt  String
+  modelUsed  String
+  tokensUsed Int
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED_NO_KIDS
+  MARRIED_WITH_KIDS
+}
+
+enum IncomeLevel {
+  UNDER_150K
+  FROM_150K_TO_250K
+  FROM_250K_TO_400K
+  FROM_400K_TO_700K
+  OVER_700K
+}
+
+enum StabilityLevel {
+  STABLE
+  FLUCTUATING
+  UNSTABLE
+}
+
+enum DebtLevel {
+  NO_DEBTS
+  UP_TO_500K
+  FROM_500K_TO_2M
+  OVER_2M
+}
+
+enum SavingsLevel {
+  NO_SAVINGS
+  UP_TO_300K
+  FROM_300K_TO_1M
+  FROM_1M_TO_5M
+  OVER_5M
+}
+
+enum AssetType {
+  NONE
+  CASH_DEPOSITS
+  BROKERAGE_IIS
+  INSURANCE_NSZH_ISZH
+  REAL_ESTATE_LIVING
+}
+
+enum PainPoint {
+  NO_SAFETY_NET
+  DEBT_PRESSURE
+  MONEY_DISAPPEARS
+  FEAR_CRISIS
+  WANT_INVEST_DONT_KNOW_HOW
+  OTHER
+}
+
+enum GoalType {
+  BUILD_SAFETY_NET
+  CLOSE_DEBTS
+  START_INVESTING
+  PASSIVE_INCOME
+  INCOME_REAL_ESTATE
+}
+
+enum WhyNowReason {
+  WANT_SYSTEM
+  CANT_HANDLE_ALONE
+  BAD_EXPERIENCE_BEFORE
+  KNOWS_NEEDS_HELP
+  OTHER
+}
+
+enum ReadinessLevel {
+  READY_REGULAR
+  READY_WITH_MOTIVATION
+  HARD_TO_FOLLOW_BUT_WANT
+  UNSURE
+}
+
+enum FeedbackStyle {
+  STRICT_CONTROL
+  SOFT_SUPPORT
+  FACTS_ONLY
+}
+
+enum ReserveAmount {
+  UP_TO_10K
+  FROM_10K_TO_30K
+  FROM_30K_TO_70K
+  OVER_70K
+}
+
+enum BudgetLevel {
+  NOT_READY_PAY
+  ONE_TIME_UP_TO_30K
+  ONE_TIME_30K_100K
+  SUBSCRIPTION_100K_PLUS
+  OPEN_TO_DISCUSS
+}
+
+enum Qualification {
+  PENDING
+  HOT
+  WARM
+  COLD
+  NOT_READY
+}
+
+enum NextStep {
+  BOOK_CALL
+  SEND_MATERIALS
+  WAIT_ACCUMULATE
+  MANUAL_REVIEW
+}
