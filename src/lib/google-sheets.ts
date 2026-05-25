@@ -50,6 +50,7 @@ export async function appendLeadToGoogleSheet(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(row),
+    redirect: "follow",
   });
 
   if (!res.ok) {
