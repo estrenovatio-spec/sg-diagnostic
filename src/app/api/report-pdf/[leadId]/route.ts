@@ -15,9 +15,8 @@ export async function GET(_request: Request, { params }: Params) {
   }
 
   const pdfBytes = await buildReportPdf(lead, lead.aiReport);
-  const body = new Blob([pdfBytes], { type: "application/pdf" });
 
-  return new NextResponse(body, {
+  return new NextResponse(Buffer.from(pdfBytes), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="sg-capital-report-${lead.id}.pdf"`,
