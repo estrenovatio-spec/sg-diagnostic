@@ -78,15 +78,18 @@ git push -u origin main
 4. Подключите БД к проекту: **Connect Project** → выберите ваш Next.js-проект
 5. Vercel сам добавит переменные вроде `POSTGRES_URL`
 
-### Важно для Prisma
+### Важно для Prisma (две переменные!)
 
-В **Settings → Environment Variables** добавьте (или проверьте):
+В **Settings → Environment Variables** добавьте (значения — в карточке Storage → **.env.local** tab):
 
 | Имя | Значение |
 |-----|----------|
-| `DATABASE_URL` | Скопируйте **`POSTGRES_PRISMA_URL`** из Storage (если есть). Иначе — `POSTGRES_URL` с суффиксом `?sslmode=require` |
+| `DATABASE_URL` | **`POSTGRES_PRISMA_URL`** (для работы сайта) |
+| `DIRECT_URL` | **`POSTGRES_URL_NON_POOLING`** (для миграций при сборке) |
 
-Обычно в Storage есть подсказка: *Use `POSTGRES_PRISMA_URL` for Prisma* — используйте её для `DATABASE_URL`.
+Без `DIRECT_URL` сборка часто падает с ошибкой `prisma migrate deploy`.
+
+Если Storage уже подключён к проекту, скрипт сборки подставит `POSTGRES_*` сам — но **надёжнее** задать `DATABASE_URL` и `DIRECT_URL` вручную, как в таблице.
 
 ---
 
@@ -96,7 +99,8 @@ git push -u origin main
 
 | Переменная | Обязательно | Что указать |
 |------------|-------------|-------------|
-| `DATABASE_URL` | ✅ | `POSTGRES_PRISMA_URL` из Storage (см. шаг 3) |
+| `DATABASE_URL` | ✅ | `POSTGRES_PRISMA_URL` из Storage |
+| `DIRECT_URL` | ✅ | `POSTGRES_URL_NON_POOLING` из Storage |
 | `NEXT_PUBLIC_SITE_URL` | ✅ | Пока `https://ваш-проект.vercel.app` — **обновите после первого деплоя** на реальный URL |
 | `RATE_LIMIT_SECRET` | ✅ | Любая длинная случайная строка (например 32+ символа) |
 | `CRON_SECRET` | для cron | Ещё одна случайная строка |
@@ -117,11 +121,15 @@ git push -u origin main
 2. Подождите 2–5 минут. Зелёная галочка = успех
 3. Откройте ссылку **Visit** — это ваша публичная ссылка
 
-### Если сборка упала
+### Если сборка упала (`prisma migrate deploy` / exit code 1)
 
-- Откройте **Building → View Logs**
-- Частая причина: нет `DATABASE_URL` или неверный URL БД
-- После исправления переменных: **Deployments → … → Redeploy**
+1. **Building → View Logs** — прокрутите до красной строки
+2. Частые причины:
+   - не подключена БД в **Storage → Connect Project**
+   - нет **`DIRECT_URL`** (`POSTGRES_URL_NON_POOLING`)
+   - **`DATABASE_URL`** — не pooled URL, а обычный (нужен `POSTGRES_PRISMA_URL`)
+3. Добавьте обе переменные → **Deployments → Redeploy**
+4. Убедитесь, что код на GitHub обновлён (`git push`)
 
 ---
 
