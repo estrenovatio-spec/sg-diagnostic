@@ -1,4 +1,5 @@
 import EmbeddedPostgres from "embedded-postgres";
+import { existsSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
@@ -15,7 +16,12 @@ const pg = new EmbeddedPostgres({
   persistent: true,
 });
 
-await pg.initialise();
+const dataDir = join(root, ".pgdata");
+const hasCluster = existsSync(join(dataDir, "PG_VERSION"));
+
+if (!hasCluster) {
+  await pg.initialise();
+}
 await pg.start();
 
 try {
