@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { AlertTriangle, Sparkles, Target, TrendingUp, Zap } from "lucide-react";
 import { CTASection } from "@/app/diagnostic/report/components/CTASection";
-import { DownloadPDF } from "@/app/diagnostic/report/components/DownloadPDF";
 import { ReportCard } from "@/app/diagnostic/report/components/ReportCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
@@ -21,9 +20,9 @@ export default async function ReportPage({ params }: Props) {
   const report = lead.aiReport;
   const q = qualifyLead(lead);
   const focusText =
-    lead.nextStep === "WAIT_ACCUMULATE"
-      ? "Финансовая подушка и дисциплина в учёте расходов"
-      : report.priorityFocus;
+    lead.nextStep === "WAIT_ACCUMULATE" ? q.message : report.priorityFocus;
+  const showCta =
+    lead.nextStep === "BOOK_CALL" || lead.nextStep === "SEND_MATERIALS";
 
   return (
     <main className="mx-auto max-w-2xl space-y-6 px-4 py-8 md:py-12">
@@ -64,16 +63,16 @@ export default async function ReportPage({ params }: Props) {
         </CardContent>
       </Card>
 
-      <CTASection
-        leadId={lead.id}
-        qualification={lead.qualification}
-        nextStep={lead.nextStep}
-        message={q.message}
-      />
+      {showCta && (
+        <CTASection
+          leadId={lead.id}
+          qualification={lead.qualification}
+          nextStep={lead.nextStep}
+          message={q.message}
+        />
+      )}
 
-      <div className="flex justify-center pb-8">
-        <DownloadPDF leadId={lead.id} />
-      </div>
+      <div className="pb-8" />
     </main>
   );
 }

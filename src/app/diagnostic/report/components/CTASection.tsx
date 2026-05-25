@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Calendar, Mail, PiggyBank } from "lucide-react";
+import { Calendar, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { NextStep, Qualification } from "@prisma/client";
@@ -51,15 +51,5 @@ export function CTASection({ leadId, qualification, nextStep, message }: Props) 
     );
   }
 
-  return (
-    <Card>
-      <CardContent className="space-y-4 p-6">
-        <PiggyBank className="h-8 w-8 text-primary" />
-        <p className="text-sm leading-relaxed">{message}</p>
-        <Button variant="outline" asChild onClick={() => onCta("restart")}>
-          <Link href="/diagnostic">Пройти снова</Link>
-        </Button>
-      </CardContent>
-    </Card>
-  );
+  return null;
 }

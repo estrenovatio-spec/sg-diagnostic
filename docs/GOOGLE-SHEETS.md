@@ -1,56 +1,44 @@
 # Google Таблица — лиды из анкеты
 
-Каждая отправленная анкета может автоматически добавлять **строку в Google Sheets**.
+Каждая новая анкета на сайте может добавлять **строку в таблицу** (если настроен webhook).
 
 ---
 
-## Где сейчас лежат данные (без Таблицы)
+## ⚠️ Важно про Apps Script
 
-Все ответы в **PostgreSQL** (Neon / Vercel Storage), таблицы `Lead` и `AiReport`.
+**Не нажимайте «Выполнить» (▶) у функции `doPost`** — она не для ручного запуска.
 
-### Способ A: Neon (если БД через Neon)
+Сообщение *«функция myFunction удалена»* появляется, если запускается **старая** функция из шаблона Google. Её нужно **удалить** и оставить только код ниже.
 
-1. [console.neon.tech](https://console.neon.tech) → ваш проект  
-2. **SQL Editor** → запрос:
-
-```sql
-SELECT id, "createdAt", "fullName", age, city, phone, telegram,
-       profession, "incomeLevel", "hasSavings", qualification
-FROM "Lead"
-ORDER BY "createdAt" DESC;
-```
-
-### Способ B: Prisma Studio (с компьютера)
-
-```bash
-cd sg-diagnostic
-# в .env должны быть DATABASE_URL и DIRECT_URL с продакшена (Vercel → Storage → .env)
-npx prisma studio
-```
-
-Откроется браузер → таблица **Lead**.
-
-### Способ C: Vercel
-
-**Storage** → ваша БД → **Data** / **Open in Neon** (если есть кнопка).
+`doPost` срабатывает **только** когда сайт отправляет HTTP-запрос после анкеты.
 
 ---
 
-## Подключить Google Таблицу (15 минут)
+## Где лежат данные без Таблицы
 
-### 1. Создайте таблицу
+PostgreSQL (Neon / Vercel) → таблица **Lead**.  
+См. SQL в Neon Console или `npx prisma studio`.
 
-[Google Sheets](https://sheets.google.com) → новая таблица, например «Лиды SG Diagnostic».
+---
 
-В **первой строке** заголовки (можно скопировать):
+## Настройка Google Таблицы
+
+### 1. Таблица
+
+[Google Sheets](https://sheets.google.com) → новая таблица.
+
+Первая строка — заголовки:
 
 ```
-id | дата | ФИО | возраст | город | телефон | telegram | профессия | доход | долги | накопления | активы | боль | цели | бюджет | вопрос | квалификация | ссылка на отчёт | utm
+id | дата | ФИО | возраст | город | телефон | telegram | профессия | доход | долги | накопления | активы | боль | цели | бюджет | вопрос | квалификация | ссылка | utm
 ```
 
 ### 2. Apps Script
 
-**Расширения → Apps Script**, вставьте:
+**Расширения → Apps Script**
+
+1. Удалите всё из редактора (включая `function myFunction`).
+2. Вставьте **только** этот код:
 
 ```javascript
 function doPost(e) {
@@ -82,46 +70,67 @@ function doPost(e) {
   return ContentService.createTextOutput(JSON.stringify({ ok: true }))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+/** Только для проверки: Run → testAppend — появится тестовая строка */
+function testAppend() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  sheet.appendRow([
+    "test-id",
+    new Date().toISOString(),
+    "Тест Тестов",
+    30,
+    "Москва",
+    "",
+    "",
+    "тест",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "TEST",
+    "https://example.com",
+    "",
+  ]);
+}
 ```
 
-**Сохранить** → **Развернуть → Новое развёртывание → Тип: Веб-приложение**
+3. **Сохранить** (дискета).
 
-- Запуск от: **Меня**  
-- Доступ: **Все** (Anyone)  
+### 3. Развернуть как веб-приложение
 
-Скопируйте **URL веб-приложения** (длинный, заканчивается на `/exec`).
+1. **Развернуть** → **Новое развёртывание**
+2. Тип: **Веб-приложение**
+3. Запуск от: **Меня**
+4. Кто имеет доступ: **Все** (Anyone)
+5. **Развернуть** → скопировать **URL** (оканчивается на `/exec`)
 
-### 3. Vercel
+Проверка таблицы вручную: в списке функций выберите **`testAppend`** → **Выполнить** → в таблице должна появиться строка «Тест Тестов».
 
-**Settings → Environment Variables** (или прямая ссылка `.../settings/environment-variables`):
+### 4. Vercel
+
+Переменная окружения:
 
 | Key | Value |
 |-----|--------|
-| `GOOGLE_SHEETS_WEBHOOK_URL` | URL из шага 2 |
+| `GOOGLE_SHEETS_WEBHOOK_URL` | URL из шага 3 (`.../exec`) |
 
-**Redeploy.**
+**Redeploy** проекта. Код с `appendLeadToGoogleSheet` должен быть на GitHub (`git push`).
 
-### 4. Проверка
+### 5. Проверка с сайта
 
-Пройдите анкету на сайте → в таблице должна появиться новая строка.
-
----
-
-## Локально
-
-В `.env`:
-
-```
-GOOGLE_SHEETS_WEBHOOK_URL="https://script.google.com/macros/s/...../exec"
-```
+Пройдите анкету на проде → новая строка в таблице (не testAppend).
 
 ---
 
 ## Если строка не появилась
 
-- URL заканчивается на `/exec`, не `/dev`  
-- В Apps Script развёртывание с доступом **Все**  
-- Redeploy после добавления переменной  
+- URL именно `/exec`, не `/dev`
+- Новое развёртывание после правок скрипта
+- `GOOGLE_SHEETS_WEBHOOK_URL` в Vercel + Redeploy
 - Логи Vercel: `Google Sheets sync failed`
 
-Анкета клиенту всё равно сохранится в БД — Таблица опциональна.
+Данные в БД сохраняются в любом случае.
