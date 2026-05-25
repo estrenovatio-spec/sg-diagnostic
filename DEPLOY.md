@@ -76,7 +76,9 @@ git push -u origin main
 2. **Create Database → Postgres** (или **Neon** — тоже подходит)
 3. Имя, например: `sg-diagnostic-db` → **Create**
 4. Подключите БД к проекту: **Connect Project** → выберите ваш Next.js-проект
-5. Vercel сам добавит переменные вроде `POSTGRES_URL`
+5. Vercel добавит переменные `POSTGRES_*` — они должны быть видны в **Settings → Environment Variables**
+
+> Если при сборке ошибка `DATABASE_URL не задан` — БД не привязана к проекту или переменные не созданы. См. шаг 4 и таблицу ниже.
 
 ### Важно для Prisma (две переменные!)
 
