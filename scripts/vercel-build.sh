@@ -38,7 +38,7 @@ if [ -z "${DATABASE_URL:-}" ]; then
   echo "  4. После добавления — Redeploy (не старый коммит!)"
   echo ""
   echo "Диагностика (задано / нет):"
-  for v in DATABASE_URL DIRECT_URL POSTGRES_PRISMA_URL POSTGRES_URL POSTGRES_URL_NON_POOLING POSTGRES_URL DATABASE_URL_UNPOOLED; do
+  for v in DATABASE_URL DIRECT_URL POSTGRES_PRISMA_URL POSTGRES_URL POSTGRES_URL_NON_POOLING DATABASE_URL_UNPOOLED NEON_DATABASE_URL; do
     if [ -n "${!v:-}" ]; then echo "  ${v}=да"; else echo "  ${v}=нет"; fi
   done
   exit 1
