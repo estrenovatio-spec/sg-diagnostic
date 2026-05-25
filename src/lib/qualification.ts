@@ -47,8 +47,11 @@ export function buildColdMessage(lead: LeadQualificationInput): string {
     return "Когда будете готовы обсудить формат работы с советником — вернитесь к диагностике или запишитесь на вводную сессию.";
   }
 
+  const closing =
+    "Когда накопите 300 000 ₽ свободных денег — приходите снова: вместе выстроим стратегию роста капитала и пассивного дохода.";
+
   if (focus.length === 0) {
-    return "Накопите от 300 000 ₽ свободных средств — тогда сможем перейти к полноценной инвестиционной стратегии.";
+    return closing;
   }
 
   const focusText =
@@ -56,7 +59,7 @@ export function buildColdMessage(lead: LeadQualificationInput): string {
       ? focus[0]
       : `${focus.slice(0, -1).join(", ")} и ${focus[focus.length - 1]}`;
 
-  return `Сначала сфокусируйтесь на ${focusText}. Вернитесь, когда будет от 300 000 ₽ свободных средств.`;
+  return `Сейчас важно ${focusText}. ${closing}`;
 }
 
 export function qualifyLead(lead: LeadQualificationInput): QualificationResult {

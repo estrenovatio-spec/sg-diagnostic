@@ -3,9 +3,9 @@ import { DebtLevel, SavingsLevel } from "@prisma/client";
 import OpenAI from "openai";
 import { buildDiagnosticReportPrompt, buildLeadContext } from "@/lib/ai/prompts";
 import { type AiReportOutput, parseAiJsonResponse } from "@/lib/ai/parser";
+import { resolveAiClientConfig } from "@/lib/ai/provider";
 import { qualifyLead } from "@/lib/qualification";
 
-const MODEL = process.env.AI_MODEL ?? "gpt-4o-mini";
 const TEMPERATURE = Number(process.env.AI_TEMPERATURE ?? "0.3");
 
 function buildFallbackRisks(lead: Lead): string[] {
@@ -55,7 +55,10 @@ function buildFallbackReport(lead: Lead): AiReportOutput {
         ? "Определить целевую сумму подушки и ежемесячный взнос на неё"
         : "Составить список обязательств с датами и ставками",
     ],
-    priorityFocus: q.message,
+    priorityFocus:
+      q.qualification === "COLD" || q.nextStep === "WAIT_ACCUMULATE"
+        ? "Финансовая подушка и дисциплина в учёте расходов"
+        : q.message,
     investmentReadiness: q.qualification === "HOT",
     consultationRecommendation: q.message,
     suggestedNextStep:
@@ -75,21 +78,25 @@ export async function generateAiReport(lead: Lead): Promise<{
 }> {
   const leadContext = buildLeadContext(lead);
   const rawPrompt = buildDiagnosticReportPrompt(leadContext);
+  const ai = resolveAiClientConfig();
 
-  if (!process.env.OPENAI_API_KEY) {
+  if (!ai.apiKey) {
     return {
       output: buildFallbackReport(lead),
       rawPrompt,
-      modelUsed: "fallback (без OpenAI — по правилам анкеты)",
+      modelUsed: "fallback (нет API-ключа — по правилам анкеты)",
       tokensUsed: 0,
     };
   }
 
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const client = new OpenAI({
+    apiKey: ai.apiKey,
+    baseURL: ai.baseURL,
+  });
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: MODEL,
+    const completion = await client.chat.completions.create({
+      model: ai.model,
       temperature: TEMPERATURE,
       response_format: { type: "json_object" },
       messages: [
@@ -108,14 +115,14 @@ export async function generateAiReport(lead: Lead): Promise<{
     return {
       output,
       rawPrompt,
-      modelUsed: MODEL,
+      modelUsed: `${ai.provider}:${ai.model}`,
       tokensUsed: completion.usage?.total_tokens ?? 0,
     };
   } catch {
     return {
       output: buildFallbackReport(lead),
       rawPrompt,
-      modelUsed: "fallback-error",
+      modelUsed: `fallback-error (${ai.provider})`,
       tokensUsed: 0,
     };
   }

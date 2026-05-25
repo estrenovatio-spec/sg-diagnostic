@@ -20,6 +20,10 @@ export default async function ReportPage({ params }: Props) {
 
   const report = lead.aiReport;
   const q = qualifyLead(lead);
+  const focusText =
+    lead.nextStep === "WAIT_ACCUMULATE"
+      ? "Финансовая подушка и дисциплина в учёте расходов"
+      : report.priorityFocus;
 
   return (
     <main className="mx-auto max-w-2xl space-y-6 px-4 py-8 md:py-12">
@@ -53,7 +57,7 @@ export default async function ReportPage({ params }: Props) {
           <CardTitle className="text-base">Фокус на ближайший месяц</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">{report.priorityFocus}</p>
+          <p className="text-sm text-muted-foreground">{focusText}</p>
           {report.investmentReadiness && (
             <p className="mt-2 text-xs text-primary">По анкете — есть база для инвестиционной стратегии</p>
           )}
@@ -64,8 +68,7 @@ export default async function ReportPage({ params }: Props) {
         leadId={lead.id}
         qualification={lead.qualification}
         nextStep={lead.nextStep}
-        recommendation={q.message}
-        qualificationMessage={report.consultationRecommendation}
+        message={q.message}
       />
 
       <div className="flex justify-center pb-8">

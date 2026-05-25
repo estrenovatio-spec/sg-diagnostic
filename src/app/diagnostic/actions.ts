@@ -5,6 +5,7 @@ import { generateAiReport } from "@/lib/ai/client";
 import { prisma } from "@/lib/db";
 import { qualifyLead } from "@/lib/qualification";
 import { checkRateLimit, getClientIp, hashIp } from "@/lib/security";
+import { appendLeadToGoogleSheet } from "@/lib/google-sheets";
 import { notifyManager, sendReportToClient } from "@/lib/telegram";
 import { diagnosticSchema, type DiagnosticFormValues } from "@/lib/validation/schema";
 import type { Qualification } from "@prisma/client";
@@ -94,6 +95,13 @@ export async function submitDiagnostic(data: DiagnosticFormValues): Promise<Subm
 
   await notifyManager(lead, q.qualification);
   await sendReportToClient(lead.telegram, aiReport, lead.id);
+
+  const reportUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/diagnostic/report/${lead.id}`;
+  try {
+    await appendLeadToGoogleSheet(lead, q.qualification, reportUrl);
+  } catch (err) {
+    console.error("Google Sheets sync failed:", err);
+  }
 
   revalidatePath(`/diagnostic/report/${lead.id}`);
 
